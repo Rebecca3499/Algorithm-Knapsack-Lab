@@ -21,7 +21,7 @@ git clone --depth=1 --filter=blob:none --sparse "$REPO" /tmp/jj-sparse
 cd /tmp/jj-sparse
 
 echo "=== Checking out selected instances ==="
-git sparse-checkout set optima.csv "${INSTANCES[@]}"
+git sparse-checkout set --skip-checks optima.csv "${INSTANCES[@]}"
 
 echo "=== Copying to $TARGET ==="
 mkdir -p "$OLDPWD/$TARGET/problemInstances"
