@@ -1,0 +1,10 @@
+dataset_source=Pi
+dataset_name=STRONGLY_CORRELATED_M
+n=500
+capacity=624635
+algorithm=DP
+value=801635
+optimum=801635
+gap_percent=0.00
+time_ms=739.220
+status=OK

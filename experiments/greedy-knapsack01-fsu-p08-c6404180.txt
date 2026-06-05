@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P08
+n=24
+capacity=6404180
+algorithm=Greedy
+value=13415886
+optimum=13549094
+gap_percent=0.98
+time_ms=0.081
+status=OK

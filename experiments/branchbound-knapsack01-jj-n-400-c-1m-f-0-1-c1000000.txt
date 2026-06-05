@@ -1,0 +1,10 @@
+dataset_source=JJ
+dataset_name=n=400,c=1M,f=0.1
+n=400
+capacity=1000000
+algorithm=BranchBound
+value=
+optimum=1003939
+gap_percent=
+time_ms=0.000
+status=SKIP

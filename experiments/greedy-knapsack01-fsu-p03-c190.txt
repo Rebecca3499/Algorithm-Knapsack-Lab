@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P03
+n=6
+capacity=190
+algorithm=Greedy
+value=146
+optimum=150
+gap_percent=2.67
+time_ms=0.026
+status=OK

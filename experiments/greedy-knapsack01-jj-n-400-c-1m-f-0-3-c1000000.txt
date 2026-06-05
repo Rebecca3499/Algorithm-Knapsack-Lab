@@ -1,0 +1,10 @@
+dataset_source=JJ
+dataset_name=n=400,c=1M,f=0.3
+n=400
+capacity=1000000
+algorithm=Greedy
+value=1004587
+optimum=1005007
+gap_percent=0.04
+time_ms=0.990
+status=OK

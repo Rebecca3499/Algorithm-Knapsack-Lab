@@ -8,9 +8,17 @@ public class JJExperiment {
         String solver = getStringArg(args, "--solver", "both");
         int startInstance = Math.max(1, getIntArg(args, "--start", 1));
         int maxInstances = getIntArg(args, "--max", Integer.MAX_VALUE);
+        long exactTimeoutMs = getLongArg(args, "--timeout-ms", 60_000L);
 
         String base = "data/JJ/problemInstances";
         String optimaPath = "data/JJ/optima.csv";
+
+        if (!Files.isDirectory(Paths.get(base)) || !Files.exists(Paths.get(optimaPath))) {
+            System.out.println("JJ data is missing. Run setup_jj.sh first, then rerun JJExperiment.");
+            System.out.println("Windows Git Bash example:");
+            System.out.println("  \"C:\\Program Files\\Git\\bin\\bash.exe\" -lc 'cd /d/Algorithm-Knapsack-Lab && bash setup_jj.sh'");
+            return;
+        }
 
         java.util.HashMap<String, Integer> optima = new java.util.HashMap<String, Integer>();
         for (String line : Files.readAllLines(Paths.get(optimaPath))) {
@@ -66,6 +74,10 @@ public class JJExperiment {
 
             String backtrackingValue = "SKIP";
             String branchBoundValue = "SKIP";
+            String backtrackingStatus = "SKIP";
+            String branchBoundStatus = "SKIP";
+            long backtrackingTime = 0;
+            long branchBoundTime = 0;
             String exactTime = "";
             if (runExact) {
                 System.out.println("  Running exact solvers for " + shortName + " ...");
@@ -73,18 +85,26 @@ public class JJExperiment {
                 StringBuilder exactTimeBuilder = new StringBuilder("  Exact:");
                 if ("both".equals(solver) || "branchbound".equals(solver)) {
                     long t5 = System.nanoTime();
-                    BranchBoundKnapsack.Result branchBoundRes = BranchBoundKnapsack.solve(wt, val, cap);
+                    BranchBoundKnapsack.Result branchBoundRes =
+                            BranchBoundKnapsack.solveWithTimeout(wt, val, cap, exactTimeoutMs);
                     long t6 = System.nanoTime();
+                    branchBoundTime = t6 - t5;
                     branchBoundValue = String.valueOf(branchBoundRes.totalValue);
-                    exactTimeBuilder.append(String.format(" BranchBound=%.2fms", (t6 - t5) / 1e6));
+                    branchBoundStatus = branchBoundRes.timedOut ? "TIMEOUT" : "OK";
+                    exactTimeBuilder.append(String.format(" BranchBound=%.2fms(%s)",
+                            branchBoundTime / 1e6, branchBoundStatus));
                 }
 
                 if ("both".equals(solver) || "backtracking".equals(solver)) {
                     long t7 = System.nanoTime();
-                    BacktrackingKnapsack.Result backtrackingRes = BacktrackingKnapsack.solve(wt, val, cap);
+                    BacktrackingKnapsack.Result backtrackingRes =
+                            BacktrackingKnapsack.solveWithTimeout(wt, val, cap, exactTimeoutMs);
                     long t8 = System.nanoTime();
+                    backtrackingTime = t8 - t7;
                     backtrackingValue = String.valueOf(backtrackingRes.totalValue);
-                    exactTimeBuilder.append(String.format(" Backtracking=%.2fms", (t8 - t7) / 1e6));
+                    backtrackingStatus = backtrackingRes.timedOut ? "TIMEOUT" : "OK";
+                    exactTimeBuilder.append(String.format(" Backtracking=%.2fms(%s)",
+                            backtrackingTime / 1e6, backtrackingStatus));
                 }
 
                 exactTime = exactTimeBuilder.toString();
@@ -101,13 +121,67 @@ public class JJExperiment {
             if (!exactTime.isEmpty()) {
                 System.out.println(exactTime);
             }
+
+            writeCsvRow(shortName, n, cap, "DP", dpVal, bestVal, t3, t4, "OK");
+            writeCsvRow(shortName, n, cap, "Greedy", greedyVal, bestVal, t1, t2, "OK");
+            writeExactCsvRow(shortName, n, cap, "Backtracking", backtrackingValue,
+                    bestVal, backtrackingTime, backtrackingStatus);
+            writeExactCsvRow(shortName, n, cap, "BranchBound", branchBoundValue,
+                    bestVal, branchBoundTime, branchBoundStatus);
         }
 
         if (!runExact) {
             System.out.println("\nNote: JJ instances here have n=400/1000, so exact Backtracking and BranchBound are skipped by default.");
             System.out.println("      Add --exact to run them anyway, and use --start=N/--max=N to choose instances.");
             System.out.println("      Add --solver=backtracking or --solver=branchbound to try one exact solver at a time.");
+            System.out.println("      Add --timeout-ms=N to control each exact solver timeout.");
         }
+    }
+
+    static void writeCsvRow(
+            String name,
+            int n,
+            int capacity,
+            String algorithm,
+            int value,
+            int optimum,
+            long startNanos,
+            long endNanos,
+            String status) throws Exception {
+        ExperimentCsvWriter.write(
+                "JJ",
+                name,
+                n,
+                capacity,
+                algorithm,
+                ExperimentCsvWriter.value(value),
+                ExperimentCsvWriter.value(optimum),
+                ExperimentCsvWriter.gapPercent(value, optimum),
+                ExperimentCsvWriter.timeMs(startNanos, endNanos),
+                status);
+    }
+
+    static void writeExactCsvRow(
+            String name,
+            int n,
+            int capacity,
+            String algorithm,
+            String value,
+            int optimum,
+            long elapsedNanos,
+            String status) throws Exception {
+        boolean hasValue = value != null && !"SKIP".equals(value);
+        ExperimentCsvWriter.write(
+                "JJ",
+                name,
+                n,
+                capacity,
+                algorithm,
+                hasValue ? value : ExperimentCsvWriter.empty(),
+                ExperimentCsvWriter.value(optimum),
+                hasValue ? ExperimentCsvWriter.gapPercent(Integer.parseInt(value), optimum) : ExperimentCsvWriter.empty(),
+                String.format(java.util.Locale.US, "%.3f", elapsedNanos / 1e6),
+                status);
     }
 
     static String line(int length) {
@@ -130,6 +204,16 @@ public class JJExperiment {
         for (String arg : args) {
             if (arg.startsWith(prefix)) {
                 return Integer.parseInt(arg.substring(prefix.length()));
+            }
+        }
+        return defaultValue;
+    }
+
+    static long getLongArg(String[] args, String name, long defaultValue) {
+        String prefix = name + "=";
+        for (String arg : args) {
+            if (arg.startsWith(prefix)) {
+                return Long.parseLong(arg.substring(prefix.length()));
             }
         }
         return defaultValue;

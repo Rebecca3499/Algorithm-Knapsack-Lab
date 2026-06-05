@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P05
+n=8
+capacity=104
+algorithm=DP
+value=900
+optimum=900
+gap_percent=0.00
+time_ms=0.057
+status=OK

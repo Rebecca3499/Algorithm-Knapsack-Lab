@@ -4,6 +4,7 @@ import java.nio.file.*;
 public class PiExperiment {
 
     private static final int EXACT_SEARCH_LIMIT = 50;
+    private static final long EXACT_TIMEOUT_MS = 30_000L;
 
     public static void main(String[] args) throws Exception {
         PiDataGenerator.main(args);
@@ -34,19 +35,27 @@ public class PiExperiment {
 
             Integer backtrackingVal = null;
             long backtrackingTime = 0;
+            String backtrackingStatus = "SKIP";
             Integer branchBoundVal = null;
             long branchBoundTime = 0;
+            String branchBoundStatus = "SKIP";
 
             if (wt.length <= EXACT_SEARCH_LIMIT) {
                 long t5 = System.nanoTime();
-                backtrackingVal = BacktrackingKnapsack.solve(wt, val, capacity).totalValue;
+                BacktrackingKnapsack.Result backtrackingRes =
+                        BacktrackingKnapsack.solveWithTimeout(wt, val, capacity, EXACT_TIMEOUT_MS);
                 long t6 = System.nanoTime();
+                backtrackingVal = backtrackingRes.totalValue;
                 backtrackingTime = t6 - t5;
+                backtrackingStatus = backtrackingRes.timedOut ? "TIMEOUT" : "OK";
 
                 long t7 = System.nanoTime();
-                branchBoundVal = BranchBoundKnapsack.solve(wt, val, capacity).totalValue;
+                BranchBoundKnapsack.Result branchBoundRes =
+                        BranchBoundKnapsack.solveWithTimeout(wt, val, capacity, EXACT_TIMEOUT_MS);
                 long t8 = System.nanoTime();
+                branchBoundVal = branchBoundRes.totalValue;
                 branchBoundTime = t8 - t7;
+                branchBoundStatus = branchBoundRes.timedOut ? "TIMEOUT" : "OK";
             }
 
             double gap = dpVal > 0 ? (double) (dpVal - greedyVal) / dpVal * 100 : 0;
@@ -63,7 +72,59 @@ public class PiExperiment {
             } else {
                 System.out.println(", Backtracking=SKIP, BranchBound=SKIP");
             }
+
+            writeCsvRow(inst, wt.length, capacity, "DP", dpVal, dpVal, t1, t2, "OK");
+            writeCsvRow(inst, wt.length, capacity, "Greedy", greedyVal, dpVal, t3, t4, "OK");
+            writeExactCsvRow(inst, wt.length, capacity, "Backtracking",
+                    backtrackingVal, dpVal, backtrackingTime, backtrackingStatus);
+            writeExactCsvRow(inst, wt.length, capacity, "BranchBound",
+                    branchBoundVal, dpVal, branchBoundTime, branchBoundStatus);
         }
+    }
+
+    static void writeCsvRow(
+            String name,
+            int n,
+            int capacity,
+            String algorithm,
+            int value,
+            int optimum,
+            long startNanos,
+            long endNanos,
+            String status) throws Exception {
+        ExperimentCsvWriter.write(
+                "Pi",
+                name,
+                n,
+                capacity,
+                algorithm,
+                ExperimentCsvWriter.value(value),
+                ExperimentCsvWriter.value(optimum),
+                ExperimentCsvWriter.gapPercent(value, optimum),
+                ExperimentCsvWriter.timeMs(startNanos, endNanos),
+                status);
+    }
+
+    static void writeExactCsvRow(
+            String name,
+            int n,
+            int capacity,
+            String algorithm,
+            Integer value,
+            int optimum,
+            long elapsedNanos,
+            String status) throws Exception {
+        ExperimentCsvWriter.write(
+                "Pi",
+                name,
+                n,
+                capacity,
+                algorithm,
+                value == null ? ExperimentCsvWriter.empty() : ExperimentCsvWriter.value(value),
+                ExperimentCsvWriter.value(optimum),
+                value == null ? ExperimentCsvWriter.empty() : ExperimentCsvWriter.gapPercent(value, optimum),
+                String.format(java.util.Locale.US, "%.3f", elapsedNanos / 1e6),
+                status);
     }
 
     static String formatValue(Integer value) {

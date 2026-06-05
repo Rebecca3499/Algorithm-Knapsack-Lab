@@ -6,7 +6,8 @@ import java.util.*;
 // 参考 Pisinger 论文中的实例类型
 public class PiDataGenerator {
 
-    static Random rand = new Random(42); // 固定种子，可复现
+    static final long SEED = 42L;
+    static Random rand = new Random(SEED); // 固定种子，可复现
 
     // 生成模式
     enum Mode {
@@ -59,6 +60,7 @@ public class PiDataGenerator {
     }
 
     public static void main(String[] args) throws Exception {
+        rand = new Random(SEED);
         System.out.println("Generating Pi-style instances...\n");
 
         // 三种模式 × 三种规模

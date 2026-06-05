@@ -1,0 +1,10 @@
+dataset_source=Pi
+dataset_name=STRONGLY_CORRELATED_S
+n=50
+capacity=12939
+algorithm=Backtracking
+value=16437
+optimum=16437
+gap_percent=0.00
+time_ms=0.218
+status=OK

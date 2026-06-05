@@ -1,0 +1,10 @@
+dataset_source=JJ
+dataset_name=n=400,c=1M,f=0.3
+n=400
+capacity=1000000
+algorithm=DP
+value=1005007
+optimum=1005007
+gap_percent=0.00
+time_ms=727.072
+status=OK

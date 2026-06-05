@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P04
+n=7
+capacity=50
+algorithm=Backtracking
+value=107
+optimum=107
+gap_percent=0.00
+time_ms=0.037
+status=OK

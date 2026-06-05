@@ -20,10 +20,16 @@ public class BacktrackingKnapsack {
     static class Result {
         int totalValue;
         boolean[] selected;
+        boolean timedOut;
 
         Result(int totalValue, boolean[] selected) {
+            this(totalValue, selected, false);
+        }
+
+        Result(int totalValue, boolean[] selected, boolean timedOut) {
             this.totalValue = totalValue;
             this.selected = selected;
+            this.timedOut = timedOut;
         }
     }
 
@@ -32,14 +38,22 @@ public class BacktrackingKnapsack {
     private int bestValue;
     private boolean[] currentSelected;
     private boolean[] bestSelected;
+    private long deadlineNanos;
+    private boolean timedOut;
 
     public static Result solve(int[] weights, int[] values, int capacity) {
-        return new BacktrackingKnapsack().run(weights, values, capacity);
+        return new BacktrackingKnapsack().run(weights, values, capacity, 0);
     }
 
-    private Result run(int[] weights, int[] values, int capacity) {
+    public static Result solveWithTimeout(int[] weights, int[] values, int capacity, long timeoutMs) {
+        return new BacktrackingKnapsack().run(weights, values, capacity, timeoutMs);
+    }
+
+    private Result run(int[] weights, int[] values, int capacity, long timeoutMs) {
         int n = weights.length;
         this.capacity = capacity;
+        this.deadlineNanos = timeoutMs > 0 ? System.nanoTime() + timeoutMs * 1_000_000L : Long.MAX_VALUE;
+        this.timedOut = false;
         this.items = new Item[n];
         for (int i = 0; i < n; i++) {
             items[i] = new Item(i, weights[i], values[i]);
@@ -54,10 +68,14 @@ public class BacktrackingKnapsack {
         this.bestSelected = greedy.selected.clone();
 
         search(0, 0, 0);
-        return new Result(bestValue, bestSelected);
+        return new Result(bestValue, bestSelected, timedOut);
     }
 
     private void search(int index, int currentWeight, int currentValue) {
+        if (timedOut || isExpired()) {
+            timedOut = true;
+            return;
+        }
         if (currentWeight > capacity) {
             return;
         }
@@ -78,6 +96,10 @@ public class BacktrackingKnapsack {
         }
 
         search(index + 1, currentWeight, currentValue);
+    }
+
+    private boolean isExpired() {
+        return deadlineNanos != Long.MAX_VALUE && System.nanoTime() >= deadlineNanos;
     }
 
     private void updateBest(int value) {

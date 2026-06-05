@@ -1,0 +1,10 @@
+dataset_source=Pi
+dataset_name=WEAKLY_CORRELATED_S
+n=50
+capacity=12402
+algorithm=Greedy
+value=13822
+optimum=13822
+gap_percent=0.00
+time_ms=0.173
+status=OK

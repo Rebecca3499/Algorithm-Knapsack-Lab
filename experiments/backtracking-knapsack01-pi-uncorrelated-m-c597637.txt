@@ -1,0 +1,10 @@
+dataset_source=Pi
+dataset_name=UNCORRELATED_M
+n=500
+capacity=597637
+algorithm=Backtracking
+value=
+optimum=1001186
+gap_percent=
+time_ms=0.000
+status=SKIP

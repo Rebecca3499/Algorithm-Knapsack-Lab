@@ -35,15 +35,27 @@ public class BranchBoundKnapsack {
     static class Result {
         int totalValue;
         boolean[] selected;
+        boolean timedOut;
 
         Result(int totalValue, boolean[] selected) {
+            this(totalValue, selected, false);
+        }
+
+        Result(int totalValue, boolean[] selected, boolean timedOut) {
             this.totalValue = totalValue;
             this.selected = selected;
+            this.timedOut = timedOut;
         }
     }
 
     public static Result solve(int[] weights, int[] values, int capacity) {
+        return solveWithTimeout(weights, values, capacity, 0);
+    }
+
+    public static Result solveWithTimeout(int[] weights, int[] values, int capacity, long timeoutMs) {
         int n = weights.length;
+        long deadlineNanos = timeoutMs > 0 ? System.nanoTime() + timeoutMs * 1_000_000L : Long.MAX_VALUE;
+        boolean timedOut = false;
         Item[] items = new Item[n];
         for (int i = 0; i < n; i++) {
             items[i] = new Item(i, weights[i], values[i]);
@@ -60,6 +72,10 @@ public class BranchBoundKnapsack {
         pq.add(root);
 
         while (!pq.isEmpty()) {
+            if (deadlineNanos != Long.MAX_VALUE && System.nanoTime() >= deadlineNanos) {
+                timedOut = true;
+                break;
+            }
             Node node = pq.poll();
             if (node.bound <= bestValue || node.level >= n) {
                 continue;
@@ -96,7 +112,7 @@ public class BranchBoundKnapsack {
             }
         }
 
-        return new Result(bestValue, bestSelected);
+        return new Result(bestValue, bestSelected, timedOut);
     }
 
     private static double bound(Node node, Item[] items, int capacity) {

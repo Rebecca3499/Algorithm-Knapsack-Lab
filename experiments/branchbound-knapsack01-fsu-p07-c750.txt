@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P07
+n=15
+capacity=750
+algorithm=BranchBound
+value=1458
+optimum=1458
+gap_percent=0.00
+time_ms=0.760
+status=OK

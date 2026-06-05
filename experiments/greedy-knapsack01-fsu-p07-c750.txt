@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P07
+n=15
+capacity=750
+algorithm=Greedy
+value=1441
+optimum=1458
+gap_percent=1.17
+time_ms=0.084
+status=OK

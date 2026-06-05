@@ -55,7 +55,40 @@ public class Experiment {
 
             System.out.printf("  Time: DP=%.3fms, Greedy=%.3fms, Backtracking=%.3fms, BranchBound=%.3fms\n",
                     (t2 - t1) / 1e6, (t4 - t3) / 1e6, (t6 - t5) / 1e6, (t8 - t7) / 1e6);
+
+            writeCsvRow("FSU", p.toUpperCase(), wt.length, capacity, "DP",
+                    dpRes.totalValue, optVal, t1, t2, "OK");
+            writeCsvRow("FSU", p.toUpperCase(), wt.length, capacity, "Greedy",
+                    greedyRes.totalValue, optVal, t3, t4, "OK");
+            writeCsvRow("FSU", p.toUpperCase(), wt.length, capacity, "Backtracking",
+                    backtrackingRes.totalValue, optVal, t5, t6, "OK");
+            writeCsvRow("FSU", p.toUpperCase(), wt.length, capacity, "BranchBound",
+                    branchBoundRes.totalValue, optVal, t7, t8, "OK");
         }
+    }
+
+    static void writeCsvRow(
+            String source,
+            String name,
+            int n,
+            int capacity,
+            String algorithm,
+            int value,
+            int optimum,
+            long startNanos,
+            long endNanos,
+            String status) throws Exception {
+        ExperimentCsvWriter.write(
+                source,
+                name,
+                n,
+                capacity,
+                algorithm,
+                ExperimentCsvWriter.value(value),
+                ExperimentCsvWriter.value(optimum),
+                ExperimentCsvWriter.gapPercent(value, optimum),
+                ExperimentCsvWriter.timeMs(startNanos, endNanos),
+                status);
     }
 
     static void warnIfMismatch(String algorithm, int actual, int expected) {

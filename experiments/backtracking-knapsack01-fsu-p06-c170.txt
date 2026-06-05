@@ -1,0 +1,10 @@
+dataset_source=FSU
+dataset_name=P06
+n=7
+capacity=170
+algorithm=Backtracking
+value=1735
+optimum=1735
+gap_percent=0.00
+time_ms=0.070
+status=OK
