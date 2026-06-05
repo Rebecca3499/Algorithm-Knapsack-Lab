@@ -1,13 +1,23 @@
-.claude/
-.idea/
-out/
-data/JJ/
 *.class
+
+# LaTeX temporary files
 *.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
 *.log
 *.out
-*.toc
 *.synctex.gz
-*.zip
+*.toc
+
+# IDE and OS files
+.idea/
+.vscode/
+.claude/
+out/
 .DS_Store
 Thumbs.db
+
+# Downloaded by setup_jj.sh
+data/JJ/
